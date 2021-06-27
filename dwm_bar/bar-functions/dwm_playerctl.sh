@@ -13,7 +13,11 @@ dwm_playerctl () {
 
 	printf "%s" "$SEP1"
 	if [ "$STATUS" = "Playing" ]; then
-		printf "Now Playing: %s - %s" "$SONG" "$ARTIST"
+		if [ "$ARTIST" = "" ]; then
+                        printf "Now Playing: %s" "$SONG"
+                else
+                        printf "Now Playing: %s - %s" "$SONG" "$ARTIST"
+                fi
 	else
 		printf "Player paused"
 	fi
