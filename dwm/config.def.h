@@ -3,10 +3,10 @@
 /* mediakeys */
 
 #include <X11/XF86keysym.h>
-static const char *prevsong[]   = { "/usr/bin/playerctl", "previous",     NULL };
-static const char *nextsong[] = { "/usr/bin/playerctl", "next",     NULL };
-static const char *playpause[] = { "/usr/bin/playerctl", "play-pause",    NULL };
-
+static const char *prevsong[]   = { "/usr/bin/playerctl", "previous", NULL };
+static const char *nextsong[] = { "/usr/bin/playerctl", "next", NULL };
+static const char *playpause[] = { "/usr/bin/playerctl", "play-pause", NULL };
+static const char *stopsong[] = { "/usr/bin/playerctl", "stop", NULL };
 /* appearance */
 
 static const unsigned int igappx    = 5;        /* size of inner gaps */
@@ -79,13 +79,16 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_lblu, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
 static const char *slock[] = { "slock", NULL };
+static const char *firefox[] = { "firefox", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ 0,                       	XF86XK_AudioNext, spawn,   {.v = nextsong } },
 	{ 0,                       	XF86XK_AudioPlay, spawn,   {.v = playpause } },
 	{ 0,                       	XF86XK_AudioPrev, spawn,   {.v = prevsong } },
+	{ 0,				XF86XK_AudioStop, spawn,   {.v = stopsong} },
 	{ MODKEY|ShiftMask,		XK_l,	   spawn,	   {.v = slock } },
+	{ MODKEY|ShiftMask,		XK_f,	   spawn,	   {.v = firefox } },
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
@@ -147,4 +150,3 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
-
