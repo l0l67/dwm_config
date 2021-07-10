@@ -33,4 +33,4 @@ static XRectangle rectangles[9] = {
 
 
 /* time in seconds before the monitor shuts down */
-static const int monitortime = 5;
+static const int monitortime = 10;

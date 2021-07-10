@@ -22,13 +22,13 @@ dwm_resources () {
 	#STOTOT=$(echo $df_output | awk '{print $2}')
 	STOPER=$(echo $df_output | awk '{print $5}')
 
-	printf "%s" "$SEP1"
+	#printf "%s" "$SEP1"
 	if [ "$IDENTIFIER" = "unicode" ]; then
-		printf "MEM: %s/%s | CPU %s | Storage-used: %s" "$MEMUSED" "$MEMTOT" "$CPU" "$STOPER"
+		printf "  ^c#a484e9^  %s/%s   ^c#ffaf68^  %s   ^c#f4889a^  %s   " "$MEMUSED" "$MEMTOT" "$CPU" "$STOPER"
 	else
 		printf "RAM: %s/%s | CPU %s | Storage-used: %s" "$MEMUSED" "$MEMTOT" "$CPU" "$STOPER"
 	fi
-	printf "%s\n" "$SEP2"
+	#printf "%s\n" "$SEP2"
 }
 
 dwm_resources

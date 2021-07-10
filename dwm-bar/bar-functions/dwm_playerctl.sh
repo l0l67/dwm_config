@@ -10,18 +10,20 @@ dwm_playerctl () {
 	#ALBUM=$(playerctl metadata album	#album is same as title in firefox?)
 	STATUS=$(playerctl status)
 
-
-	printf "%s" "$SEP1"
+	#printf "%s" "$SEP1"
+	printf "^c#31bff3^" #set color
 	if [ "$STATUS" = "Playing" ]; then
 		if [ "$ARTIST" = "" ]; then
-			printf "Now Playing: %s" "$SONG"
+			printf "  %s  " "$SONG"
 		else
-			printf "Now Playing: %s - %s" "$SONG" "$ARTIST"
+			printf "  %s - %s  " "$SONG" "$ARTIST"
 		fi
+	elif [ "$STATUS" = "Stopped" ]; then
+		printf "  Nothing Playing...  "
 	else
-		printf "Player paused"
+		printf "  Nothing Playing...  "
 	fi
-	printf "%s\n" "$SEP2"
+	#printf "%s\n" "$SEP2"
 }
 
 dwm_playerctl

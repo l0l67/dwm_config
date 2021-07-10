@@ -1,6 +1,5 @@
 # dwm-bar
-A modular (customized) statusbar for dwm
-the original dwm-bar is from https://github.com/joestandring/dwm-bar this is just my customized version
+A modular statusbar for dwm
 ![screenshot](sshot.png)
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J11S7DZ)
 ## Table of Contents
