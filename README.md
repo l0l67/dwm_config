@@ -1,2 +1,2 @@
 # dwm_config
-custom dwm configuration files
+custom dwm configuration files (and other)
