@@ -1,6 +1,6 @@
 /* user and group to drop privileges to */
 static const char *user  = "nobody";
-static const char *group = "nobody";
+static const char *group = "nogroup";
 
 static const char *colorname[NUMCOLS] = {
 	[BACKGROUND] =   "black",     /* after initialization */
@@ -33,4 +33,4 @@ static XRectangle rectangles[9] = {
 
 
 /* time in seconds before the monitor shuts down */
-static const int monitortime = 10;
+static const int monitortime = 1;
