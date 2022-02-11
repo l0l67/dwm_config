@@ -55,9 +55,8 @@ static Clr *scheme[SchemeLast];
 
 #include "config.h"
 
-static char * cistrstr(const char *s, const char *sub);
-static int (*fstrncmp)(const char *, const char *, size_t) = strncasecmp;
-static char *(*fstrstr)(const char *, const char *) = cistrstr;
+static int (*fstrncmp)(const char *, const char *, size_t) = strncmp;
+static char *(*fstrstr)(const char *, const char *) = strstr;
 
 static void
 appenditem(struct item *item, struct item **list, struct item **last)
@@ -104,13 +103,20 @@ cleanup(void)
 }
 
 static char *
-cistrstr(const char *s, const char *sub)
+cistrstr(const char *h, const char *n)
 {
-	size_t len;
+	size_t i;
 
-	for (len = strlen(sub); *s; s++)
-		if (!strncasecmp(s, sub, len))
-			return (char *)s;
+	if (!n[0])
+		return (char *)h;
+
+	for (; *h; ++h) {
+		for (i = 0; n[i] && tolower((unsigned char)n[i]) ==
+		            tolower((unsigned char)h[i]); ++i)
+			;
+		if (n[i] == '\0')
+			return (char *)h;
+	}
 	return NULL;
 }
 
@@ -229,13 +235,8 @@ match(void)
 			die("cannot realloc %u bytes:", tokn * sizeof *tokv);
 	len = tokc ? strlen(tokv[0]) : 0;
 
-	if (use_prefix) {
-		matches = lprefix = matchend = prefixend = NULL;
-		textsize = strlen(text);
-	} else {
-		matches = lprefix = lsubstr = matchend = prefixend = substrend = NULL;
-		textsize = strlen(text) + 1;
-	}
+	matches = lprefix = lsubstr = matchend = prefixend = substrend = NULL;
+	textsize = strlen(text) + 1;
 	for (item = items; item && item->text; item++) {
 		for (i = 0; i < tokc; i++)
 			if (!fstrstr(item->text, tokv[i]))
@@ -247,7 +248,7 @@ match(void)
 			appenditem(item, &matches, &matchend);
 		else if (!fstrncmp(tokv[0], item->text, len))
 			appenditem(item, &lprefix, &prefixend);
-		else if (!use_prefix)
+		else
 			appenditem(item, &lsubstr, &substrend);
 	}
 	if (lprefix) {
@@ -258,7 +259,7 @@ match(void)
 			matches = lprefix;
 		matchend = prefixend;
 	}
-	if (!use_prefix && lsubstr) {
+	if (lsubstr) {
 		if (matches) {
 			matchend->right = lsubstr;
 			lsubstr->left = matchend;
@@ -266,7 +267,6 @@ match(void)
 			matches = lsubstr;
 		matchend = substrend;
 	}
-
 	curr = sel = matches;
 	calcoffsets();
 }
@@ -316,7 +316,6 @@ keypress(XKeyEvent *ev)
 {
 	char buf[32];
 	int len;
-	struct item * item;
 	KeySym ksym;
 	Status status;
 
@@ -368,9 +367,11 @@ keypress(XKeyEvent *ev)
 			                  utf8, utf8, win, CurrentTime);
 			return;
 		case XK_Left:
+		case XK_KP_Left:
 			movewordedge(-1);
 			goto draw;
 		case XK_Right:
+		case XK_KP_Right:
 			movewordedge(+1);
 			goto draw;
 		case XK_Return:
@@ -408,6 +409,7 @@ insert:
 			insert(buf, len);
 		break;
 	case XK_Delete:
+	case XK_KP_Delete:
 		if (text[cursor] == '\0')
 			return;
 		cursor = nextrune(+1);
@@ -418,6 +420,7 @@ insert:
 		insert(NULL, nextrune(-1) - cursor);
 		break;
 	case XK_End:
+	case XK_KP_End:
 		if (text[cursor] != '\0') {
 			cursor = strlen(text);
 			break;
@@ -437,6 +440,7 @@ insert:
 		cleanup();
 		exit(1);
 	case XK_Home:
+	case XK_KP_Home:
 		if (sel == matches) {
 			cursor = 0;
 			break;
@@ -445,6 +449,7 @@ insert:
 		calcoffsets();
 		break;
 	case XK_Left:
+	case XK_KP_Left:
 		if (cursor > 0 && (!sel || !sel->left || lines > 0)) {
 			cursor = nextrune(-1);
 			break;
@@ -453,18 +458,21 @@ insert:
 			return;
 		/* fallthrough */
 	case XK_Up:
+	case XK_KP_Up:
 		if (sel && sel->left && (sel = sel->left)->right == curr) {
 			curr = prev;
 			calcoffsets();
 		}
 		break;
 	case XK_Next:
+	case XK_KP_Next:
 		if (!next)
 			return;
 		sel = curr = next;
 		calcoffsets();
 		break;
 	case XK_Prior:
+	case XK_KP_Prior:
 		if (!prev)
 			return;
 		sel = curr = prev;
@@ -481,6 +489,7 @@ insert:
 			sel->out = 1;
 		break;
 	case XK_Right:
+	case XK_KP_Right:
 		if (text[cursor] != '\0') {
 			cursor = nextrune(+1);
 			break;
@@ -489,23 +498,19 @@ insert:
 			return;
 		/* fallthrough */
 	case XK_Down:
+	case XK_KP_Down:
 		if (sel && sel->right && (sel = sel->right) == next) {
 			curr = next;
 			calcoffsets();
 		}
 		break;
 	case XK_Tab:
-		if (!matches) break; /* cannot complete no matches */
-		strncpy(text, matches->text, sizeof text - 1);
+		if (!sel)
+			return;
+		strncpy(text, sel->text, sizeof text - 1);
 		text[sizeof text - 1] = '\0';
-		len = cursor = strlen(text); /* length of longest common prefix */
-		for (item = matches; item && item->text; item = item->right) {
-			cursor = 0;
-			while (cursor < len && text[cursor] == item->text[cursor])
-				cursor++;
-			len = cursor;
-		}
-		memset(text + len, '\0', strlen(text) - len);
+		cursor = strlen(text);
+		match();
 		break;
 	}
 
@@ -702,7 +707,7 @@ setup(void)
 static void
 usage(void)
 {
-	fputs("usage: dmenu [-bfivx] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	fputs("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
 	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
 	exit(1);
 }
@@ -722,12 +727,10 @@ main(int argc, char *argv[])
 			topbar = 0;
 		else if (!strcmp(argv[i], "-f"))   /* grabs keyboard before reading stdin */
 			fast = 1;
-		else if (!strcmp(argv[i], "-s")) { /* case-sensitive item matching */
-                       fstrncmp = strncmp;
-		       fstrstr = strstr;
-		} else if (!strcmp(argv[i], "-x"))   /* invert use_prefix */
-			use_prefix = !use_prefix;
-		else if (i + 1 == argc)
+		else if (!strcmp(argv[i], "-i")) { /* case-insensitive item matching */
+			fstrncmp = strncasecmp;
+			fstrstr = cistrstr;
+		} else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */
 		else if (!strcmp(argv[i], "-l"))   /* number of lines in vertical list */
